@@ -35,7 +35,8 @@ module "sessions" {
 | RC80 | 16   | 118Gi  | 236Gi            |
 
 CPU and memory are derived from `size` / `nodes.*.tier`. An unknown name is
-rejected. Storage can grow past the included amount via `nodes`.
+rejected. Storage can grow past the included amount via `nodes`, or on its own
+with `storage_autoscale`, up to its `max_storage`.
 
 `mode = "cluster"` shards the keyspace across `shards` primaries, each with
 `replicas_per_shard` replicas. With `size`, the node count is derived as
@@ -87,12 +88,13 @@ No modules.
 | <a name="input_keep_backups_on_destroy"></a> [keep\_backups\_on\_destroy](#input\_keep\_backups\_on\_destroy) | Keep the cluster's backups when it is destroyed. | `bool` | `false` | no |
 | <a name="input_mode"></a> [mode](#input\_mode) | replication runs one primary and its replicas; cluster shards the keyspace. Changing it replaces the cluster. | `string` | `"replication"` | no |
 | <a name="input_node_count"></a> [node\_count](#input\_node\_count) | Nodes when using size in replication mode: one primary and node\_count - 1 replicas. In cluster mode the count is shards * (1 + replicas\_per\_shard). | `number` | `1` | no |
-| <a name="input_nodes"></a> [nodes](#input\_nodes) | The cluster's single node group, keyed by group name, when size is not enough: extra storage or a group name of your own. Renaming the group replaces the cluster. | <pre>map(object({<br/>    count  = optional(number, 1)<br/>    cloud  = string<br/>    region = string<br/>    tier   = string<br/>    resources = object({<br/>      storage = string<br/>    })<br/>  }))</pre> | `null` | no |
+| <a name="input_nodes"></a> [nodes](#input\_nodes) | The cluster's single node group, keyed by group name, when size is not enough: extra storage or a group name of your own. Renaming the group replaces the cluster. | <pre>map(object({<br/>    count  = optional(number, 1)<br/>    cloud  = string<br/>    region = string<br/>    tier   = string<br/>    resources = object({<br/>      storage = string<br/>      storage_autoscale = optional(object({<br/>        enabled           = bool<br/>        threshold_percent = optional(number)<br/>        increase_percent  = optional(number)<br/>        max_storage       = optional(string)<br/>      }))<br/>    })<br/>  }))</pre> | `null` | no |
 | <a name="input_parameters"></a> [parameters](#input\_parameters) | Valkey settings, for example maxmemory-policy. An empty map resets them; null leaves them unmanaged. | `map(string)` | `null` | no |
 | <a name="input_region"></a> [region](#input\_region) | Region for the node group when using size. | `string` | `null` | no |
 | <a name="input_replicas_per_shard"></a> [replicas\_per\_shard](#input\_replicas\_per\_shard) | Replicas behind each shard's primary in cluster mode, 0-4. | `number` | `null` | no |
 | <a name="input_shards"></a> [shards](#input\_shards) | Primaries the keyspace is split across in cluster mode, 3-100. | `number` | `null` | no |
 | <a name="input_size"></a> [size](#input\_size) | Relay Cache catalog tier (RC5–RC80). CPU and memory come from the catalog; included storage is the default volume. Set either size or nodes. | `string` | `null` | no |
+| <a name="input_storage_autoscale"></a> [storage\_autoscale](#input\_storage\_autoscale) | Grows the node group's volume past its included storage, up to max\_storage, when using size. With nodes, set it under resources. | <pre>object({<br/>    enabled           = bool<br/>    threshold_percent = optional(number)<br/>    increase_percent  = optional(number)<br/>    max_storage       = optional(string)<br/>  })</pre> | `null` | no |
 | <a name="input_timeouts"></a> [timeouts](#input\_timeouts) | Create, update and delete timeouts, for example 45m. | <pre>object({<br/>    create = optional(string)<br/>    update = optional(string)<br/>    delete = optional(string)<br/>  })</pre> | `{}` | no |
 | <a name="input_user_passwords"></a> [user\_passwords](#input\_user\_passwords) | Passwords keyed by username, for users that should not get a generated one. | `map(string)` | `{}` | no |
 | <a name="input_users"></a> [users](#input\_users) | Valkey ACL users keyed by username. A user without an entry in user\_passwords gets a generated password. | <pre>map(object({<br/>    role        = string<br/>    description = optional(string)<br/>    expires_at  = optional(string)<br/>  }))</pre> | `{}` | no |
