@@ -70,7 +70,7 @@ instead of replacing the cluster.
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_relay"></a> [relay](#provider\_relay) | 0.0.1 |
+| <a name="provider_relay"></a> [relay](#provider\_relay) | ~> 0.0.1 |
 
 ## Modules
 
