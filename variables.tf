@@ -75,8 +75,25 @@ variable "nodes" {
     tier   = string
     resources = object({
       storage = string
+      storage_autoscale = optional(object({
+        enabled           = bool
+        threshold_percent = optional(number)
+        increase_percent  = optional(number)
+        max_storage       = optional(string)
+      }))
     })
   }))
+  default = null
+}
+
+variable "storage_autoscale" {
+  description = "Grows the node group's volume past its included storage, up to max_storage, when using size. With nodes, set it under resources."
+  type = object({
+    enabled           = bool
+    threshold_percent = optional(number)
+    increase_percent  = optional(number)
+    max_storage       = optional(string)
+  })
   default = null
 }
 

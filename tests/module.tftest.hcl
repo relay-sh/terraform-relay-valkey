@@ -203,3 +203,60 @@ run "rejects_unknown_size" {
 
   expect_failures = [var.size]
 }
+
+run "storage_autoscale_with_size" {
+  command = apply
+
+  variables {
+    storage_autoscale = { enabled = true, max_storage = "40Gi" }
+    users             = {}
+    user_passwords    = {}
+  }
+
+  assert {
+    condition     = relay_valkey_cluster.this.nodes["primary"].resources.storage_autoscale.enabled && relay_valkey_cluster.this.nodes["primary"].resources.storage_autoscale.max_storage == "40Gi"
+    error_message = "storage_autoscale reaches the size preset group"
+  }
+}
+
+run "storage_autoscale_on_nodes" {
+  command = apply
+
+  variables {
+    size   = null
+    cloud  = null
+    region = null
+    nodes = {
+      cache = {
+        cloud  = "aws"
+        region = "us-east-1"
+        tier   = "RC10"
+        resources = {
+          storage           = "4Gi"
+          storage_autoscale = { enabled = true, threshold_percent = 85, max_storage = "20Gi" }
+        }
+      }
+    }
+    users          = {}
+    user_passwords = {}
+  }
+
+  assert {
+    condition     = relay_valkey_cluster.this.nodes["cache"].resources.storage_autoscale.threshold_percent == 85
+    error_message = "storage_autoscale passes through on explicit nodes"
+  }
+}
+
+run "no_storage_autoscale_by_default" {
+  command = plan
+
+  variables {
+    users          = {}
+    user_passwords = {}
+  }
+
+  assert {
+    condition     = relay_valkey_cluster.this.nodes["primary"].resources.storage_autoscale == null
+    error_message = "storage_autoscale stays off unless asked for"
+  }
+}

@@ -19,7 +19,8 @@ locals {
       region = var.region
       tier   = var.size
       resources = {
-        storage = local.included_storage[var.size]
+        storage           = local.included_storage[var.size]
+        storage_autoscale = var.storage_autoscale
       }
     }
   }
