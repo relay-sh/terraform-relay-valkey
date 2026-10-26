@@ -109,6 +109,30 @@ variable "keep_backups_on_destroy" {
   default     = false
 }
 
+variable "backup_schedule" {
+  description = "Backup schedule for the cluster. Set tiers or max_backups, not both. null keeps the platform default schedule. Valkey restores are snapshot-only, so there is no point-in-time window."
+  type = object({
+    snapshot_time = optional(object({
+      hour   = number
+      minute = number
+    }))
+    tiers = optional(list(object({
+      frequency       = string
+      interval        = number
+      retention_value = number
+      retention_unit  = optional(string)
+      enabled         = optional(bool)
+    })))
+    max_backups = optional(number)
+  })
+  default = null
+
+  validation {
+    condition     = try(var.backup_schedule.tiers, null) == null || try(var.backup_schedule.max_backups, null) == null
+    error_message = "backup_schedule takes tiers or max_backups, not both."
+  }
+}
+
 variable "timeouts" {
   description = "Create, update and delete timeouts, for example 45m."
   type = object({

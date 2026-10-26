@@ -40,3 +40,13 @@ resource "relay_valkey_user" "this" {
   description       = each.value.description
   expires_at        = each.value.expires_at
 }
+
+resource "relay_backup_schedule" "this" {
+  count = var.backup_schedule == null ? 0 : 1
+
+  workspace_id  = var.workspace_id
+  cluster_id    = relay_valkey_cluster.this.id
+  snapshot_time = var.backup_schedule.snapshot_time
+  tiers         = var.backup_schedule.tiers
+  max_backups   = var.backup_schedule.max_backups
+}
