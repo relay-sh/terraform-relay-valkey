@@ -19,6 +19,11 @@ module "sessions" {
     maxmemory-policy = "allkeys-lru"
   }
 
+  backup_schedule = {
+    snapshot_time = { hour = 4, minute = 0 }
+    max_backups   = 7
+  }
+
   users = {
     app = { role = "readWrite" }
   }
