@@ -56,6 +56,12 @@ by default) archives every write so the cluster can be restored to any second
 inside the window; it needs `replication` mode and provider 0.0.4 or later,
 and raises storage to at least twice the node's memory.
 
+`restore` creates the cluster from another cluster's backups instead of
+empty: the latest backup, or with `target_time` any instant inside the
+source's `pitr_window_days` window, which needs `replication` mode. The new
+cluster's `mode`, `engine_version` (when set) and group name must match the
+source's. It is only read on create and needs provider 0.0.5 or later.
+
 Changing `name` or `mode` replaces the cluster and its data. Version upgrades
 go through Relay's upgrade flow; a plan that changes `engine_version` fails
 instead of replacing the cluster.
@@ -102,6 +108,7 @@ No modules.
 | <a name="input_parameters"></a> [parameters](#input\_parameters) | Valkey settings, for example maxmemory-policy. An empty map resets them; null leaves them unmanaged. | `map(string)` | `null` | no |
 | <a name="input_region"></a> [region](#input\_region) | Region for the node group when using size. | `string` | `null` | no |
 | <a name="input_replicas_per_shard"></a> [replicas\_per\_shard](#input\_replicas\_per\_shard) | Replicas behind each shard's primary in cluster mode, 0-4. | `number` | `null` | no |
+| <a name="input_restore"></a> [restore](#input\_restore) | Creates the cluster from another cluster's backups: source\_database\_id, and target\_time (RFC 3339) to restore to a point in time, which needs mode replication. Only read on create; changing it replaces the cluster. Needs provider 0.0.5 or later. | <pre>object({<br/>    source_database_id = string<br/>    target_time        = optional(string)<br/>  })</pre> | `null` | no |
 | <a name="input_shards"></a> [shards](#input\_shards) | Primaries the keyspace is split across in cluster mode, 3-100. | `number` | `null` | no |
 | <a name="input_size"></a> [size](#input\_size) | Relay Cache catalog tier (RC5–RC80). CPU and memory come from the catalog; included storage is the default volume. Set either size or nodes. | `string` | `null` | no |
 | <a name="input_storage_autoscale"></a> [storage\_autoscale](#input\_storage\_autoscale) | Grows the node group's volume past its included storage, up to max\_storage, when using size. With nodes, set it under resources. | <pre>object({<br/>    enabled           = bool<br/>    threshold_percent = optional(number)<br/>    increase_percent  = optional(number)<br/>    max_storage       = optional(string)<br/>  })</pre> | `null` | no |

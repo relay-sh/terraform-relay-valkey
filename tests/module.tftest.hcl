@@ -382,3 +382,64 @@ run "rejects_pitr_window_in_cluster_mode" {
 
   expect_failures = [relay_backup_schedule.this]
 }
+
+run "restore_to_a_point_in_time" {
+  command = apply
+
+  variables {
+    restore        = { source_database_id = "db-src", target_time = "2026-10-31T12:00:00Z" }
+    users          = {}
+    user_passwords = {}
+  }
+
+  assert {
+    condition     = relay_valkey_cluster.this.restore.source_database_id == "db-src" && relay_valkey_cluster.this.restore.target_time == "2026-10-31T12:00:00Z"
+    error_message = "restore passes through"
+  }
+}
+
+run "restore_latest_backup" {
+  command = plan
+
+  variables {
+    restore = { source_database_id = "db-src" }
+  }
+
+  assert {
+    condition     = relay_valkey_cluster.this.restore.target_time == null
+    error_message = "an omitted target_time stays null"
+  }
+}
+
+run "no_restore_by_default" {
+  command = plan
+
+  assert {
+    condition     = relay_valkey_cluster.this.restore == null
+    error_message = "restore is unset by default"
+  }
+}
+
+run "rejects_restore_target_time_not_rfc3339" {
+  command = plan
+
+  variables {
+    restore = { source_database_id = "db-src", target_time = "yesterday" }
+  }
+
+  expect_failures = [var.restore]
+}
+
+run "rejects_restore_target_time_in_cluster_mode" {
+  command = plan
+
+  variables {
+    mode           = "cluster"
+    shards         = 3
+    restore        = { source_database_id = "db-src", target_time = "2026-10-31T12:00:00Z" }
+    users          = {}
+    user_passwords = {}
+  }
+
+  expect_failures = [relay_valkey_cluster.this]
+}

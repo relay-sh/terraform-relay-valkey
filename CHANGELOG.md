@@ -1,3 +1,9 @@
+## Unreleased
+
+ENHANCEMENTS:
+
+* `restore` creates the cluster from another cluster's backups, the latest one or a point in time with `target_time` in `replication` mode; it needs provider 0.0.5 or later.
+
 ## 0.0.2 (November 1, 2026)
 
 ENHANCEMENTS:

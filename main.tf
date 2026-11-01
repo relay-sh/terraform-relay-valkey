@@ -7,6 +7,7 @@ resource "relay_valkey_cluster" "this" {
   replicas_per_shard = var.replicas_per_shard
   nodes              = local.nodes
   parameters         = var.parameters
+  restore            = var.restore
 
   keep_backups_on_destroy = var.keep_backups_on_destroy
 
@@ -24,6 +25,10 @@ resource "relay_valkey_cluster" "this" {
     precondition {
       condition     = var.nodes != null || (var.cloud != null && var.region != null)
       error_message = "cloud and region are required when using size."
+    }
+    precondition {
+      condition     = try(var.restore.target_time, null) == null || var.mode == "replication"
+      error_message = "restore.target_time needs mode replication."
     }
   }
 }

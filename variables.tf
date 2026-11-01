@@ -139,6 +139,20 @@ variable "backup_schedule" {
   }
 }
 
+variable "restore" {
+  description = "Creates the cluster from another cluster's backups: source_database_id, and target_time (RFC 3339) to restore to a point in time, which needs mode replication. Only read on create; changing it replaces the cluster. Needs provider 0.0.5 or later."
+  type = object({
+    source_database_id = string
+    target_time        = optional(string)
+  })
+  default = null
+
+  validation {
+    condition     = try(var.restore.target_time, null) == null || can(formatdate("YYYY", var.restore.target_time))
+    error_message = "restore.target_time must be an RFC 3339 timestamp, for example 2026-10-31T12:00:00Z."
+  }
+}
+
 variable "timeouts" {
   description = "Create, update and delete timeouts, for example 45m."
   type = object({
