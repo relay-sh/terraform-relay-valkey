@@ -343,3 +343,42 @@ run "rejects_tiers_and_max_backups" {
 
   expect_failures = [var.backup_schedule]
 }
+
+run "backup_schedule_with_pitr_window" {
+  command = apply
+
+  variables {
+    backup_schedule = { pitr_window_days = 3 }
+    users           = {}
+    user_passwords  = {}
+  }
+
+  assert {
+    condition     = relay_backup_schedule.this[0].pitr_window_days == 3
+    error_message = "pitr_window_days passes through"
+  }
+}
+
+run "rejects_pitr_window_out_of_range" {
+  command = plan
+
+  variables {
+    backup_schedule = { pitr_window_days = 36 }
+  }
+
+  expect_failures = [var.backup_schedule]
+}
+
+run "rejects_pitr_window_in_cluster_mode" {
+  command = plan
+
+  variables {
+    mode            = "cluster"
+    shards          = 3
+    backup_schedule = { pitr_window_days = 3 }
+    users           = {}
+    user_passwords  = {}
+  }
+
+  expect_failures = [relay_backup_schedule.this]
+}

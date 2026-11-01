@@ -1,3 +1,9 @@
+## Unreleased
+
+ENHANCEMENTS:
+
+* `backup_schedule.pitr_window_days` turns on point-in-time restore, 1-35 days, in `replication` mode only; the module now needs provider 0.0.4.
+
 ## 0.0.1 (October 28, 2026)
 
 FEATURES:
