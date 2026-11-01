@@ -110,7 +110,7 @@ variable "keep_backups_on_destroy" {
 }
 
 variable "backup_schedule" {
-  description = "Backup schedule for the cluster. Set tiers or max_backups, not both. null keeps the platform default schedule. Valkey restores are snapshot-only, so there is no point-in-time window."
+  description = "Backup schedule for the cluster. Set tiers or max_backups, not both. null keeps the platform default schedule. pitr_window_days (1-35, replication mode only) turns on point-in-time restore."
   type = object({
     snapshot_time = optional(object({
       hour   = number
@@ -123,13 +123,19 @@ variable "backup_schedule" {
       retention_unit  = optional(string)
       enabled         = optional(bool)
     })))
-    max_backups = optional(number)
+    max_backups      = optional(number)
+    pitr_window_days = optional(number)
   })
   default = null
 
   validation {
     condition     = try(var.backup_schedule.tiers, null) == null || try(var.backup_schedule.max_backups, null) == null
     error_message = "backup_schedule takes tiers or max_backups, not both."
+  }
+
+  validation {
+    condition     = try(var.backup_schedule.pitr_window_days, null) == null || try(var.backup_schedule.pitr_window_days >= 1 && var.backup_schedule.pitr_window_days <= 35, false)
+    error_message = "backup_schedule.pitr_window_days must be 1-35."
   }
 }
 

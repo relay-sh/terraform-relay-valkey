@@ -44,9 +44,17 @@ resource "relay_valkey_user" "this" {
 resource "relay_backup_schedule" "this" {
   count = var.backup_schedule == null ? 0 : 1
 
-  workspace_id  = var.workspace_id
-  cluster_id    = relay_valkey_cluster.this.id
-  snapshot_time = var.backup_schedule.snapshot_time
-  tiers         = var.backup_schedule.tiers
-  max_backups   = var.backup_schedule.max_backups
+  workspace_id     = var.workspace_id
+  cluster_id       = relay_valkey_cluster.this.id
+  snapshot_time    = var.backup_schedule.snapshot_time
+  tiers            = var.backup_schedule.tiers
+  max_backups      = var.backup_schedule.max_backups
+  pitr_window_days = var.backup_schedule.pitr_window_days
+
+  lifecycle {
+    precondition {
+      condition     = var.backup_schedule.pitr_window_days == null || var.mode == "replication"
+      error_message = "backup_schedule.pitr_window_days needs mode replication."
+    }
+  }
 }
