@@ -53,8 +53,8 @@ over the whole keyspace.
 keeps the platform default schedule; removing it later resets the cluster to
 that default rather than turning backups off. `pitr_window_days` (1-35, off
 by default) archives every write so the cluster can be restored to any second
-inside the window; it needs `replication` mode and raises storage to at least
-twice the node's memory.
+inside the window; it needs `replication` mode and provider 0.0.4 or later,
+and raises storage to at least twice the node's memory.
 
 Changing `name` or `mode` replaces the cluster and its data. Version upgrades
 go through Relay's upgrade flow; a plan that changes `engine_version` fails
@@ -66,13 +66,13 @@ instead of replacing the cluster.
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.7 |
-| <a name="requirement_relay"></a> [relay](#requirement\_relay) | ~> 0.0.4 |
+| <a name="requirement_relay"></a> [relay](#requirement\_relay) | ~> 0.0.1 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_relay"></a> [relay](#provider\_relay) | ~> 0.0.4 |
+| <a name="provider_relay"></a> [relay](#provider\_relay) | ~> 0.0.1 |
 
 ## Modules
 
