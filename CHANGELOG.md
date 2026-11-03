@@ -1,3 +1,9 @@
+## 0.0.4 (November 3, 2026)
+
+ENHANCEMENTS:
+
+* `default_connections` passes the Relay-managed read-only, read-write and admin users and connections to the cluster; null creates all three on create and keeps the current value afterwards. It needs provider 0.0.10 or later ([#10](https://github.com/relay-sh/terraform-relay-valkey/pull/10))
+
 ## 0.0.3 (November 1, 2026)
 
 ENHANCEMENTS:
