@@ -51,7 +51,7 @@ over the whole keyspace.
 `backup_schedule` sets the snapshot time and either a retention ladder
 (`tiers`, one per frequency) or a flat `max_backups`. Left `null`, the cluster
 keeps the platform default schedule; removing it later resets the cluster to
-that default rather than turning backups off. `pitr_window_days` (1-35, off
+that default rather than turning backups off. `pitr_window_days` (1-7, off
 by default) archives every write so the cluster can be restored to any second
 inside the window; it needs `replication` mode and provider 0.0.4 or later,
 and raises storage to at least twice the node's memory.
@@ -98,7 +98,7 @@ No modules.
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_name"></a> [name](#input\_name) | Cluster name, unique in the workspace. Changing it replaces the cluster. | `string` | n/a | yes |
 | <a name="input_workspace_id"></a> [workspace\_id](#input\_workspace\_id) | Workspace the cluster belongs to. | `string` | n/a | yes |
-| <a name="input_backup_schedule"></a> [backup\_schedule](#input\_backup\_schedule) | Backup schedule for the cluster. Set tiers or max\_backups, not both. null keeps the platform default schedule. pitr\_window\_days (1-35, replication mode only) turns on point-in-time restore. | <pre>object({<br/>    snapshot_time = optional(object({<br/>      hour   = number<br/>      minute = number<br/>    }))<br/>    tiers = optional(list(object({<br/>      frequency       = string<br/>      interval        = number<br/>      retention_value = number<br/>      retention_unit  = optional(string)<br/>      enabled         = optional(bool)<br/>    })))<br/>    max_backups      = optional(number)<br/>    pitr_window_days = optional(number)<br/>  })</pre> | `null` | no |
+| <a name="input_backup_schedule"></a> [backup\_schedule](#input\_backup\_schedule) | Backup schedule for the cluster. Set tiers or max\_backups, not both. null keeps the platform default schedule. pitr\_window\_days (1-7, replication mode only) turns on point-in-time restore. | <pre>object({<br/>    snapshot_time = optional(object({<br/>      hour   = number<br/>      minute = number<br/>    }))<br/>    tiers = optional(list(object({<br/>      frequency       = string<br/>      interval        = number<br/>      retention_value = number<br/>      retention_unit  = optional(string)<br/>      enabled         = optional(bool)<br/>    })))<br/>    max_backups      = optional(number)<br/>    pitr_window_days = optional(number)<br/>  })</pre> | `null` | no |
 | <a name="input_cloud"></a> [cloud](#input\_cloud) | Cloud for the node group when using size, for example aws. | `string` | `null` | no |
 | <a name="input_default_connections"></a> [default\_connections](#input\_default\_connections) | Relay-managed read-only, read-write and admin users, each with a Relay connection. Null creates all three on create and keeps the current value afterwards; a role omitted inside the object does the same. Turning a role off on an existing cluster deletes its connection and user. | <pre>object({<br/>    readonly  = optional(bool)<br/>    readwrite = optional(bool)<br/>    admin     = optional(bool)<br/>  })</pre> | `null` | no |
 | <a name="input_engine_version"></a> [engine\_version](#input\_engine\_version) | Valkey version, for example 9.1. Omit it and the platform picks one. Upgrades go through Relay's upgrade flow, not this variable. | `string` | `null` | no |

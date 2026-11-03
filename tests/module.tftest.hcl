@@ -363,7 +363,7 @@ run "rejects_pitr_window_out_of_range" {
   command = plan
 
   variables {
-    backup_schedule = { pitr_window_days = 36 }
+    backup_schedule = { pitr_window_days = 8 }
   }
 
   expect_failures = [var.backup_schedule]
