@@ -443,3 +443,16 @@ run "rejects_restore_target_time_in_cluster_mode" {
 
   expect_failures = [relay_valkey_cluster.this]
 }
+
+run "default_connections_pass_through" {
+  command = plan
+
+  variables {
+    default_connections = { readonly = true, admin = false }
+  }
+
+  assert {
+    condition     = relay_valkey_cluster.this.default_connections.readonly == true && relay_valkey_cluster.this.default_connections.admin == false
+    error_message = "default_connections reaches the cluster"
+  }
+}

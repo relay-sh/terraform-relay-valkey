@@ -10,6 +10,7 @@ resource "relay_valkey_cluster" "this" {
   restore            = var.restore
 
   keep_backups_on_destroy = var.keep_backups_on_destroy
+  default_connections     = var.default_connections
 
   timeouts {
     create = var.timeouts.create
