@@ -120,7 +120,7 @@ variable "keep_backups_on_destroy" {
 }
 
 variable "backup_schedule" {
-  description = "Backup schedule for the cluster. Set tiers or max_backups, not both. null keeps the platform default schedule. pitr_window_days (1-35, replication mode only) turns on point-in-time restore."
+  description = "Backup schedule for the cluster. Set tiers or max_backups, not both. null keeps the platform default schedule. pitr_window_days (1-7, replication mode only) turns on point-in-time restore."
   type = object({
     snapshot_time = optional(object({
       hour   = number
@@ -144,8 +144,8 @@ variable "backup_schedule" {
   }
 
   validation {
-    condition     = try(var.backup_schedule.pitr_window_days, null) == null || try(var.backup_schedule.pitr_window_days >= 1 && var.backup_schedule.pitr_window_days <= 35, false)
-    error_message = "backup_schedule.pitr_window_days must be 1-35."
+    condition     = try(var.backup_schedule.pitr_window_days, null) == null || try(var.backup_schedule.pitr_window_days >= 1 && var.backup_schedule.pitr_window_days <= 7, false)
+    error_message = "backup_schedule.pitr_window_days must be 1-7."
   }
 }
 
