@@ -1,3 +1,9 @@
+## 0.1.0 (November 4, 2026)
+
+BREAKING CHANGES:
+
+* Needs provider 0.1.0. Storage is cluster-wide: `nodes.*.resources` is removed. Set the size with the new `storage_size` (default: the tier's included storage) and autoscaling with `storage_autoscale`, which now applies with `nodes` too. The provider upgrades existing state on its own
+
 ## 0.0.4 (November 3, 2026)
 
 ENHANCEMENTS:

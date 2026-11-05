@@ -46,7 +46,7 @@ run "size_preset_and_users" {
   }
 
   assert {
-    condition     = relay_valkey_cluster.this.nodes["primary"].tier == "RC20" && relay_valkey_cluster.this.nodes["primary"].resources.storage == "8Gi"
+    condition     = relay_valkey_cluster.this.nodes["primary"].tier == "RC20" && relay_valkey_cluster.this.storage.size == "8Gi"
     error_message = "size RC20 maps to catalog included storage"
   }
 
@@ -132,17 +132,15 @@ run "explicit_nodes" {
         cloud  = "gcp"
         region = "us-central1"
         tier   = "RC10"
-        resources = {
-          storage = "20Gi"
-        }
       }
     }
+    storage_size   = "20Gi"
     users          = {}
     user_passwords = {}
   }
 
   assert {
-    condition     = relay_valkey_cluster.this.nodes["cache"].cloud == "gcp" && relay_valkey_cluster.this.nodes["cache"].count == 3 && relay_valkey_cluster.this.nodes["cache"].resources.storage == "20Gi"
+    condition     = relay_valkey_cluster.this.nodes["cache"].cloud == "gcp" && relay_valkey_cluster.this.nodes["cache"].count == 3 && relay_valkey_cluster.this.storage.size == "20Gi"
     error_message = "explicit nodes pass through"
   }
 }
@@ -168,10 +166,9 @@ run "rejects_size_and_nodes" {
   variables {
     nodes = {
       primary = {
-        cloud     = "aws"
-        region    = "us-east-1"
-        tier      = "RC10"
-        resources = { storage = "4Gi" }
+        cloud  = "aws"
+        region = "us-east-1"
+        tier   = "RC10"
       }
     }
   }
@@ -219,8 +216,8 @@ run "storage_autoscale_with_size" {
   }
 
   assert {
-    condition     = relay_valkey_cluster.this.nodes["primary"].resources.storage_autoscale.enabled && relay_valkey_cluster.this.nodes["primary"].resources.storage_autoscale.max_storage == "40Gi"
-    error_message = "storage_autoscale reaches the size preset group"
+    condition     = relay_valkey_cluster.this.storage.autoscale.enabled && relay_valkey_cluster.this.storage.autoscale.max_storage == "40Gi"
+    error_message = "storage_autoscale applies to the cluster"
   }
 }
 
@@ -236,19 +233,16 @@ run "storage_autoscale_on_nodes" {
         cloud  = "aws"
         region = "us-east-1"
         tier   = "RC10"
-        resources = {
-          storage           = "4Gi"
-          storage_autoscale = { enabled = true, threshold_percent = 85, max_storage = "20Gi" }
-        }
       }
     }
-    users          = {}
-    user_passwords = {}
+    storage_autoscale = { enabled = true, threshold_percent = 85, max_storage = "20Gi" }
+    users             = {}
+    user_passwords    = {}
   }
 
   assert {
-    condition     = relay_valkey_cluster.this.nodes["cache"].resources.storage_autoscale.threshold_percent == 85
-    error_message = "storage_autoscale passes through on explicit nodes"
+    condition     = relay_valkey_cluster.this.storage.autoscale.threshold_percent == 85 && relay_valkey_cluster.this.storage.size == "4Gi"
+    error_message = "storage_autoscale applies with explicit nodes, and the size defaults to the tier's included storage"
   }
 }
 
@@ -261,7 +255,7 @@ run "no_storage_autoscale_by_default" {
   }
 
   assert {
-    condition     = relay_valkey_cluster.this.nodes["primary"].resources.storage_autoscale == null
+    condition     = relay_valkey_cluster.this.storage.autoscale == null
     error_message = "storage_autoscale stays off unless asked for"
   }
 }

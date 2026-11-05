@@ -12,18 +12,17 @@ locals {
 
   sized_count = var.mode == "cluster" && var.shards != null ? var.shards * (1 + coalesce(var.replicas_per_shard, 0)) : var.node_count
 
-  nodes = var.nodes != null ? var.nodes : {
+  nodes = var.nodes != null ? { for name, n in var.nodes : name => merge(n, { resources = {} }) } : {
     primary = {
-      count  = local.sized_count
-      cloud  = var.cloud
-      region = var.region
-      tier   = var.size
-      resources = {
-        storage           = local.included_storage[var.size]
-        storage_autoscale = var.storage_autoscale
-      }
+      count     = local.sized_count
+      cloud     = var.cloud
+      region    = var.region
+      tier      = var.size
+      resources = {}
     }
   }
+
+  storage_size = coalesce(var.storage_size, "${max([for n in values(local.nodes) : tonumber(trimsuffix(local.included_storage[n.tier], "Gi"))]...)}Gi")
 
   password_users = toset(nonsensitive(keys(var.user_passwords)))
 }
