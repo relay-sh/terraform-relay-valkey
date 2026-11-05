@@ -116,6 +116,12 @@ variable "keep_backups_on_destroy" {
   default     = false
 }
 
+variable "deletion_protection" {
+  description = "While true, the platform refuses to delete the cluster, and a destroy or a replacement fails before deleting it."
+  type        = bool
+  default     = false
+}
+
 variable "backup_schedule" {
   description = "Backup schedule for the cluster. Set tiers or max_backups, not both. null keeps the platform default schedule. pitr_window_days (1-7, replication mode only) turns on point-in-time restore."
   type = object({
