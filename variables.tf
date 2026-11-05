@@ -67,27 +67,24 @@ variable "region" {
 }
 
 variable "nodes" {
-  description = "The cluster's single node group, keyed by group name, when size is not enough: extra storage or a group name of your own. Renaming the group replaces the cluster."
+  description = "The cluster's single node group, keyed by group name, when size is not enough: a group name of your own. Renaming the group replaces the cluster."
   type = map(object({
     count  = optional(number, 1)
     cloud  = string
     region = string
     tier   = string
-    resources = object({
-      storage = string
-      storage_autoscale = optional(object({
-        enabled           = bool
-        threshold_percent = optional(number)
-        increase_percent  = optional(number)
-        max_storage       = optional(string)
-      }))
-    })
   }))
   default = null
 }
 
+variable "storage_size" {
+  description = "Volume size of every node, for example 20Gi. Defaults to the included storage of the tier. It can grow but not shrink."
+  type        = string
+  default     = null
+}
+
 variable "storage_autoscale" {
-  description = "Grows the node group's volume past its included storage, up to max_storage, when using size. With nodes, set it under resources."
+  description = "Grows every node's volume past storage_size, up to max_storage, when disk usage crosses threshold_percent."
   type = object({
     enabled           = bool
     threshold_percent = optional(number)
