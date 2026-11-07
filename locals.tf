@@ -14,11 +14,12 @@ locals {
 
   nodes = var.nodes != null ? { for name, n in var.nodes : name => merge(n, { resources = {} }) } : {
     primary = {
-      count     = local.sized_count
-      cloud     = var.cloud
-      region    = var.region
-      tier      = var.size
-      resources = {}
+      count       = local.sized_count
+      cloud       = var.cloud
+      region      = var.region
+      tier        = var.size
+      resources   = {}
+      autoscaling = null
     }
   }
 

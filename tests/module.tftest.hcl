@@ -472,3 +472,202 @@ run "deletion_protection_passes_through" {
     error_message = "deletion_protection reaches the cluster"
   }
 }
+
+run "compute_autoscaling_passes_through" {
+  command = apply
+
+  variables {
+    size   = null
+    cloud  = null
+    region = null
+    nodes = {
+      cache = {
+        cloud  = "aws"
+        region = "us-east-1"
+        tier   = "RC20"
+        autoscaling = {
+          enabled         = true
+          min_tier        = "RC10"
+          max_tier        = "RC40"
+          rules           = [{ metric = "valkey.memory", scale_up_above = 85, scale_down_below = 40 }]
+          scale_up_window = "5m"
+        }
+      }
+    }
+    users          = {}
+    user_passwords = {}
+  }
+
+  assert {
+    condition     = relay_valkey_cluster.this.nodes["cache"].autoscaling.enabled && relay_valkey_cluster.this.nodes["cache"].autoscaling.min_tier == "RC10" && relay_valkey_cluster.this.nodes["cache"].autoscaling.max_tier == "RC40"
+    error_message = "the tier bounds pass through"
+  }
+
+  assert {
+    condition     = relay_valkey_cluster.this.nodes["cache"].autoscaling.rules[0].metric == "valkey.memory" && relay_valkey_cluster.this.nodes["cache"].autoscaling.scale_up_window == "5m"
+    error_message = "the rules and windows pass through"
+  }
+}
+
+run "no_compute_autoscaling_by_default" {
+  command = plan
+
+  assert {
+    condition     = relay_valkey_cluster.this.nodes["primary"].autoscaling == null
+    error_message = "the size preset leaves compute autoscaling off"
+  }
+}
+
+run "rejects_compute_autoscaling_without_bounds" {
+  command = plan
+
+  variables {
+    size   = null
+    cloud  = null
+    region = null
+    nodes = {
+      cache = {
+        cloud       = "aws"
+        region      = "us-east-1"
+        tier        = "RC20"
+        autoscaling = { enabled = true }
+      }
+    }
+    users          = {}
+    user_passwords = {}
+  }
+
+  expect_failures = [var.nodes]
+}
+
+run "rejects_inverted_compute_thresholds" {
+  command = plan
+
+  variables {
+    size   = null
+    cloud  = null
+    region = null
+    nodes = {
+      cache = {
+        cloud       = "aws"
+        region      = "us-east-1"
+        tier        = "RC20"
+        autoscaling = { enabled = true, min_tier = "RC10", max_tier = "RC40", rules = [{ metric = "cpu", scale_up_above = 30, scale_down_below = 30 }] }
+      }
+    }
+    users          = {}
+    user_passwords = {}
+  }
+
+  expect_failures = [var.nodes]
+}
+
+run "rejects_negative_compute_threshold" {
+  command = plan
+
+  variables {
+    size   = null
+    cloud  = null
+    region = null
+    nodes = {
+      cache = {
+        cloud       = "aws"
+        region      = "us-east-1"
+        tier        = "RC20"
+        autoscaling = { enabled = true, min_tier = "RC10", max_tier = "RC40", rules = [{ metric = "cpu", scale_up_above = 30, scale_down_below = -1 }] }
+      }
+    }
+    users          = {}
+    user_passwords = {}
+  }
+
+  expect_failures = [var.nodes]
+}
+
+run "rejects_duplicate_compute_metric" {
+  command = plan
+
+  variables {
+    size   = null
+    cloud  = null
+    region = null
+    nodes = {
+      cache = {
+        cloud       = "aws"
+        region      = "us-east-1"
+        tier        = "RC20"
+        autoscaling = { enabled = true, min_tier = "RC10", max_tier = "RC40", rules = [{ metric = "cpu", scale_up_above = 80, scale_down_below = 30 }, { metric = "cpu", scale_up_above = 90, scale_down_below = 40 }] }
+      }
+    }
+    users          = {}
+    user_passwords = {}
+  }
+
+  expect_failures = [var.nodes]
+}
+
+run "rejects_more_than_eight_compute_rules" {
+  command = plan
+
+  variables {
+    size   = null
+    cloud  = null
+    region = null
+    nodes = {
+      cache = {
+        cloud       = "aws"
+        region      = "us-east-1"
+        tier        = "RC20"
+        autoscaling = { enabled = true, min_tier = "RC10", max_tier = "RC40", rules = [for m in ["a", "b", "c", "d", "e", "f", "g", "h", "i"] : { metric = m, scale_up_above = 80, scale_down_below = 30 }] }
+      }
+    }
+    users          = {}
+    user_passwords = {}
+  }
+
+  expect_failures = [var.nodes]
+}
+
+run "rejects_zero_compute_window" {
+  command = plan
+
+  variables {
+    size   = null
+    cloud  = null
+    region = null
+    nodes = {
+      cache = {
+        cloud       = "aws"
+        region      = "us-east-1"
+        tier        = "RC20"
+        autoscaling = { enabled = true, min_tier = "RC10", max_tier = "RC40", scale_up_window = "0s" }
+      }
+    }
+    users          = {}
+    user_passwords = {}
+  }
+
+  expect_failures = [var.nodes]
+}
+
+run "rejects_unparsable_compute_window" {
+  command = plan
+
+  variables {
+    size   = null
+    cloud  = null
+    region = null
+    nodes = {
+      cache = {
+        cloud       = "aws"
+        region      = "us-east-1"
+        tier        = "RC20"
+        autoscaling = { enabled = true, min_tier = "RC10", max_tier = "RC40", scale_down_window = "a day" }
+      }
+    }
+    users          = {}
+    user_passwords = {}
+  }
+
+  expect_failures = [var.nodes]
+}

@@ -67,14 +67,57 @@ variable "region" {
 }
 
 variable "nodes" {
-  description = "The cluster's single node group, keyed by group name, when size is not enough: a group name of your own. Renaming the group replaces the cluster."
+  description = "The cluster's single node group, keyed by group name, when size is not enough: a group name of your own. Renaming the group replaces the cluster. `autoscaling` moves the group one tier at a time between min_tier and max_tier; without rules the Relay default policy applies."
   type = map(object({
     count  = optional(number, 1)
     cloud  = string
     region = string
     tier   = string
+    autoscaling = optional(object({
+      enabled  = bool
+      min_tier = optional(string)
+      max_tier = optional(string)
+      rules = optional(list(object({
+        metric           = string
+        scale_up_above   = number
+        scale_down_below = number
+      })))
+      scale_up_window            = optional(string)
+      scale_down_window          = optional(string)
+      respect_maintenance_window = optional(bool)
+    }))
   }))
   default = null
+
+  validation {
+    condition     = alltrue([for a in [for n in values(coalesce(var.nodes, {})) : n.autoscaling if n.autoscaling != null] : a.min_tier != null && a.max_tier != null if a.enabled])
+    error_message = "nodes.*.autoscaling needs min_tier and max_tier when enabled."
+  }
+
+  validation {
+    condition     = alltrue([for n in values(coalesce(var.nodes, {})) : length(n.autoscaling.rules) <= 8 if n.autoscaling != null && try(n.autoscaling.rules != null, false)])
+    error_message = "nodes.*.autoscaling.rules takes at most 8 rules."
+  }
+
+  validation {
+    condition = alltrue(flatten([for n in values(coalesce(var.nodes, {})) : [
+      for r in n.autoscaling.rules : r.scale_down_below >= 0 && r.scale_down_below < r.scale_up_above
+    ] if n.autoscaling != null && try(n.autoscaling.rules != null, false)]))
+    error_message = "nodes.*.autoscaling.rules need 0 <= scale_down_below < scale_up_above."
+  }
+
+  validation {
+    condition = alltrue([for n in values(coalesce(var.nodes, {})) : length(distinct(n.autoscaling.rules[*].metric)) == length(n.autoscaling.rules)
+    if n.autoscaling != null && try(n.autoscaling.rules != null, false)])
+    error_message = "nodes.*.autoscaling.rules name each metric once."
+  }
+
+  validation {
+    condition = alltrue(flatten([for n in values(coalesce(var.nodes, {})) : [
+      for w in [n.autoscaling.scale_up_window, n.autoscaling.scale_down_window] : can(regex("^([0-9]+(\\.[0-9]+)?(ns|us|µs|ms|s|m|h))+$", w)) && can(regex("[1-9]", w)) if w != null
+    ] if n.autoscaling != null]))
+    error_message = "nodes.*.autoscaling.scale_up_window and scale_down_window are positive durations such as 5m or 1h30m."
+  }
 }
 
 variable "storage_size" {
