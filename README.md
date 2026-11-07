@@ -39,6 +39,29 @@ rejected. Storage is the tier's included amount unless `storage_size` says
 otherwise, and grows on its own with `storage_autoscale`, up to its
 `max_storage`.
 
+The group in `nodes` can autoscale its compute: `autoscaling` moves it one
+tier at a time between `min_tier` and `max_tier`, and the node count never
+changes. Without `rules` the Relay default policy applies. `tier` stays the
+configured value, so a move never shows as a plan diff; the cluster's
+`nodes["<group>"].current_tier` reports the tier the group runs at. This needs
+provider 0.1.1 or later, the `compute_autoscale` feature and a paid plan.
+
+```hcl
+nodes = {
+  cache = {
+    cloud  = "aws"
+    region = "us-east-1"
+    tier   = "RC20"
+    autoscaling = {
+      enabled  = true
+      min_tier = "RC10"
+      max_tier = "RC40"
+      rules    = [{ metric = "valkey.memory", scale_up_above = 85, scale_down_below = 40 }]
+    }
+  }
+}
+```
+
 `mode = "cluster"` shards the keyspace across `shards` primaries, each with
 `replicas_per_shard` replicas. With `size`, the node count is derived as
 `shards * (1 + replicas_per_shard)` and `node_count` is ignored; with `nodes`,
@@ -107,7 +130,7 @@ No modules.
 | <a name="input_keep_backups_on_destroy"></a> [keep\_backups\_on\_destroy](#input\_keep\_backups\_on\_destroy) | Keep the cluster's backups when it is destroyed. | `bool` | `false` | no |
 | <a name="input_mode"></a> [mode](#input\_mode) | replication runs one primary and its replicas; cluster shards the keyspace. Changing it replaces the cluster. | `string` | `"replication"` | no |
 | <a name="input_node_count"></a> [node\_count](#input\_node\_count) | Nodes when using size in replication mode: one primary and node\_count - 1 replicas. In cluster mode the count is shards * (1 + replicas\_per\_shard). | `number` | `1` | no |
-| <a name="input_nodes"></a> [nodes](#input\_nodes) | The cluster's single node group, keyed by group name, when size is not enough: a group name of your own. Renaming the group replaces the cluster. | <pre>map(object({<br/>    count  = optional(number, 1)<br/>    cloud  = string<br/>    region = string<br/>    tier   = string<br/>  }))</pre> | `null` | no |
+| <a name="input_nodes"></a> [nodes](#input\_nodes) | The cluster's single node group, keyed by group name, when size is not enough: a group name of your own. Renaming the group replaces the cluster. `autoscaling` moves the group one tier at a time between min\_tier and max\_tier; without rules the Relay default policy applies. | <pre>map(object({<br/>    count  = optional(number, 1)<br/>    cloud  = string<br/>    region = string<br/>    tier   = string<br/>    autoscaling = optional(object({<br/>      enabled  = bool<br/>      min_tier = optional(string)<br/>      max_tier = optional(string)<br/>      rules = optional(list(object({<br/>        metric           = string<br/>        scale_up_above   = number<br/>        scale_down_below = number<br/>      })))<br/>      scale_up_window            = optional(string)<br/>      scale_down_window          = optional(string)<br/>      respect_maintenance_window = optional(bool)<br/>    }))<br/>  }))</pre> | `null` | no |
 | <a name="input_parameters"></a> [parameters](#input\_parameters) | Valkey settings, for example maxmemory-policy. An empty map resets them; null leaves them unmanaged. | `map(string)` | `null` | no |
 | <a name="input_region"></a> [region](#input\_region) | Region for the node group when using size. | `string` | `null` | no |
 | <a name="input_replicas_per_shard"></a> [replicas\_per\_shard](#input\_replicas\_per\_shard) | Replicas behind each shard's primary in cluster mode, 0-4. | `number` | `null` | no |
